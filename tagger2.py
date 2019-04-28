@@ -97,6 +97,7 @@ class Grid:
         self.source_backup = self.img.copy()
         
         #should saved to file
+        self.finished = False
         self.grid_anchor_point = None
         self.scale_factor = int(1/0.3)
         self.default_box_size = default_box_size
@@ -411,118 +412,125 @@ class Grid:
 
 
     def start(self):
-        self.draw()
-        self.state = self.STATE_GRAB
-        self.source = rotate(self.source_backup, self.rotation)
-        while True:
-            cv2.setMouseCallback(self.name, self.callback)
-            self.imshow(self.name, self.img)
-          
-            k = cv2.waitKey(0) & 0xFF
-            if k == 27:
-                log.debug('setting state to grab')
-                self.state = self.STATE_GRAB
-                if self.grabbed != 0 or self.grabbed_bulk != []:                 
-                    if self.BULK[self.bulk_orientation] == self.BULK_O:
-                        self.boxes[self.grabbed] = self.grabbed_box_backup
-                    else:
-                        for i in range(len(self.grabbed_bulk)):
-                            log.debug('ungrabbing {}nth {} box in bulk'.format(i, self.grabbed + i))
-                            self.boxes[self.grabbed_bulk[i]] = self.grabbed_bulk_box_backup[i]
+        print('image state == {} and args.force == {}'.format(self.finished, self.args.force))
+        if self.finished == False or self.args.force:
+            self.draw()
+            self.state = self.STATE_GRAB
+            self.source = rotate(self.source_backup, self.rotation)
+            while True:
+                cv2.setMouseCallback(self.name, self.callback)
+                self.imshow(self.name, self.img)
 
-                if self.default_box_size_backup != None:
-                    self.default_box_size = copy.copy(self.default_box_size_backup)
-                    self.default_box_size_backup = None
-                    
-                self.grabbed = 0
-                self.grabbed_box_backup = None
-                self.grabbed_bulk = []
-                self.grabbed_bulk_box_backup = []
-                self.grid_backup = []
+                k = cv2.waitKey(0) & 0xFF
+                if k == 27:
+                    log.debug('setting state to grab')
+                    self.state = self.STATE_GRAB
+                    if self.grabbed != 0 or self.grabbed_bulk != []:                 
+                        if self.BULK[self.bulk_orientation] == self.BULK_O:
+                            self.boxes[self.grabbed] = self.grabbed_box_backup
+                        else:
+                            for i in range(len(self.grabbed_bulk)):
+                                log.debug('ungrabbing {}nth {} box in bulk'.format(i, self.grabbed + i))
+                                self.boxes[self.grabbed_bulk[i]] = self.grabbed_bulk_box_backup[i]
 
-            elif k == ord('q'):
-                log.debug('quit!')
-                exit(0)
-                
-            elif k == ord('g'):
-                log.debug('setting state to grab')
-                self.state = self.STATE_GRAB
-                
-            elif k == ord('k'):
-                log.debug('setting state to grab')
-                self.state = self.STATE_GRAB
-                self.grabbed += 1
-                if self.grabbed == len (self.boxes):
-                    self.grabbed = 1
+                    if self.default_box_size_backup != None:
+                        self.default_box_size = copy.copy(self.default_box_size_backup)
+                        self.default_box_size_backup = None
 
-                self.draw()
-                
-            elif k == ord('s'):
-                log.debug('setting state to scale')
-                self.state = self.STATE_SCALE
-                self.scale_first_point_set = False
-                
-            elif k == ord('S'):
-                log.debug('setting state to scale boxes')
-                self.state = self.STATE_SCALE_BOXES
-                self.default_box_size_backup = copy.copy(self.default_box_size)
-                self.scale_boxes_first_point_set = False
-                
-            elif k == ord('m'):
-                log.debug('move grabbed box')
-                self.state = self.STATE_MOVE
-                self.move_first_point_set = False
-                
-            elif k == ord('n'):
-                log.debug('generate new grid')
-                self.state = self.STATE_SCALE_GRID
-                self.scale_grid_first_point_set = False
-                
-            elif k == ord('M'):
-                log.debug('move  grid')
-                self.state = self.STATE_MOVE_GRID
-                self.move_grid_first_point_set = False
-                self.grid_backup = copy.copy(self.boxes)
-                
-            elif k == ord('R'):
-                log.debug('rotate image {} degree'.format(self.rotation))
-                self.state = self.STATE_ROTATE
-                self.source = rotate(self.source, self.unit_rotation)
-                self.rotation += self.unit_rotation
-                self.draw()
+                    self.grabbed = 0
+                    self.grabbed_box_backup = None
+                    self.grabbed_bulk = []
+                    self.grabbed_bulk_box_backup = []
+                    self.grid_backup = []
 
-            elif k == ord('r'):
-                log.debug('rotate image {} degree'.format(-self.rotation))
-                self.state = self.STATE_ROTATE
-                self.source = rotate(self.source, -self.unit_rotation)
-                self.rotation -= self.unit_rotation
-                self.draw()
-                
-            elif k == ord('c'):
-                log.debug('clear roration')
-                self.state = self.STATE_ROTATE
-                self.source = self.source_backup.copy()
-                self.rotation = 0
-                self.draw()
-                
-                
-            elif k == ord('b'):
-                self.bulk_orientation += 1
-                self.grabbed_bulk = []
-                self.grabbed_bulk_box_backup = []
-                if self.bulk_orientation > 2:
-                    self.bulk_orientation = 0
-                log.debug('setting bulk to {}'.format(self.bulk_orientation))
-                
-            elif k == ord(' '):
-                self.save_state()
-            
-            elif k == ord('\n'):
-                self.save_state()
-                break
-            
-                
-        self.save_state()
+                elif k == ord('q'):
+                    log.debug('quit!')
+                    exit(0)
+
+                elif k == ord('g'):
+                    log.debug('setting state to grab')
+                    self.state = self.STATE_GRAB
+
+                elif k == ord('k'):
+                    log.debug('setting state to grab')
+                    self.state = self.STATE_GRAB
+                    self.grabbed += 1
+                    if self.grabbed == len (self.boxes):
+                        self.grabbed = 1
+
+                    self.draw()
+
+                elif k == ord('s'):
+                    log.debug('setting state to scale')
+                    self.state = self.STATE_SCALE
+                    self.scale_first_point_set = False
+
+                elif k == ord('S'):
+                    log.debug('setting state to scale boxes')
+                    self.state = self.STATE_SCALE_BOXES
+                    self.default_box_size_backup = copy.copy(self.default_box_size)
+                    self.scale_boxes_first_point_set = False
+
+                elif k == ord('m'):
+                    log.debug('move grabbed box')
+                    self.state = self.STATE_MOVE
+                    self.move_first_point_set = False
+
+                elif k == ord('n'):
+                    log.debug('generate new grid')
+                    self.state = self.STATE_SCALE_GRID
+                    self.scale_grid_first_point_set = False
+
+                elif k == ord('M'):
+                    log.debug('move  grid')
+                    self.state = self.STATE_MOVE_GRID
+                    self.move_grid_first_point_set = False
+                    self.grid_backup = copy.copy(self.boxes)
+
+                elif k == ord('R'):
+                    log.debug('rotate image {} degree'.format(self.rotation))
+                    self.state = self.STATE_ROTATE
+                    self.source = rotate(self.source, self.unit_rotation)
+                    self.rotation += self.unit_rotation
+                    self.draw()
+
+                elif k == ord('r'):
+                    log.debug('rotate image {} degree'.format(-self.rotation))
+                    self.state = self.STATE_ROTATE
+                    self.source = rotate(self.source, -self.unit_rotation)
+                    self.rotation -= self.unit_rotation
+                    self.draw()
+
+                elif k == ord('c'):
+                    log.debug('clear roration')
+                    self.state = self.STATE_ROTATE
+                    self.source = self.source_backup.copy()
+                    self.rotation = 0
+                    self.draw()                
+
+                elif k == ord('b'):
+                    self.bulk_orientation += 1
+                    self.grabbed_bulk = []
+                    self.grabbed_bulk_box_backup = []
+                    if self.bulk_orientation > 2:
+                        self.bulk_orientation = 0
+                    log.debug('setting bulk to {}'.format(self.bulk_orientation))
+
+                elif k == ord(' '):
+                    self.save_state()
+
+                elif k == ord('F'):
+                    self.finished = True
+                    self.save_state()
+
+                elif k == ord('\n'):
+                    self.save_state()
+                    break
+
+
+            self.save_state()
+
+        cv2.destroyAllWindows()
         return self.boxes[1:]
 
     def save_state(self):
@@ -539,6 +547,7 @@ class Grid:
                     self.grid_m, self.grid_n,
                     self.box_dist_m, self.box_dist_n,
                     self.grid_anchor_point,
+                    self.finished,
                 ))
             )
             
@@ -554,7 +563,8 @@ class Grid:
                  self.rotation,
                  self.grid_m, self.grid_n,
                  self.box_dist_m, self.box_dist_n,
-                 self.grid_anchor_point) = state
+                 self.grid_anchor_point,
+                 self.finished) = state
                 
         except:
             log.exception('====')
