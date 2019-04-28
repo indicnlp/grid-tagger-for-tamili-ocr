@@ -629,14 +629,27 @@ def write_shapes(args, shapes):
 import argparse
 if __name__ == '__main__':
 
-    filepath = random.choice(glob('sheets/*.jpg'))
+    filepath = random.choice(glob('*/*.jpg'))
     
     parser = argparse.ArgumentParser(description='Grid-segmenter')
+    
+    parser.add_argument('-l','--loop',
+                        help='loop through all images',
+                        action='store_true', default=False, dest='loop')
+
+    
     parser.add_argument('-f','--filepath',
                         help='path to the image file',
                         default=filepath, dest='filepath')
-
     
+    parser.add_argument('-i','--input-dir',
+                        help='path to the image file',
+                        default='sheets', dest='input_dir')
+
+    parser.add_argument('-F','--force',
+                        help='start tagging even if finished set to true',
+                        action='store_true', default=False, dest='force')
+
     parser.add_argument('-t','--type',
                         help='type of interface 0 for point based and 1 for line based',
                         default=0, dest='type', type=int)
@@ -660,6 +673,15 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     pprint(args)
-    total_count, shapes = process(args)
-    print('total count: {}'.format(total_count))
-    write_shapes(args, shapes)
+    if args.loop:
+        for filepath in glob('{}/*.jpg'.format(args.input_dir)):
+            log.info('processing {}'.format(filepath))
+            args.filepath = filepath
+            total_count, shapes = process(args)
+            print('total count: {}'.format(total_count))
+            write_shapes(args, shapes)
+
+    else:
+        total_count, shapes = process(args)
+        print('total count: {}'.format(total_count))
+        write_shapes(args, shapes)
