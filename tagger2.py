@@ -46,7 +46,7 @@ def rotate(image, angleInDegrees):
     rot[0, 2] += ((b_w / 2) - img_c[0])
     rot[1, 2] += ((b_h / 2) - img_c[1])
 
-    outImg = cv2.warpAffine(image, rot, (b_w, b_h), flags=cv2.INTER_LINEAR)
+    outImg = cv2.warpAffine(image, rot, (b_w, b_h), flags=cv2.INTER_LINEAR, borderValue=(255,255,255))
     return outImg
 
 def get_angle(p0, p1=np.array([0,0]), p2=None):
