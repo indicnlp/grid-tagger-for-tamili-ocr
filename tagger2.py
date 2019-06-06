@@ -626,49 +626,57 @@ def process(args, filepath=None):
     return total_count, shapes
     
 
+def make_border(im, size=120):
+    """
+    from https://stackoverflow.com/a/50504336/1685729
+    """
+    old_size = im.shape[:2] # old_size is in (height, width) format
+
+    ratio = float(size)/max(old_size)
+    new_size = tuple([int(x*ratio) for x in old_size])
+
+    # new_size should be in (width, height) format
+    im = cv2.resize(im, (new_size[1], new_size[0]))
+
+    delta_w = size - new_size[1]
+    delta_h = size - new_size[0]
+    top, bottom = delta_h//2, delta_h-(delta_h//2)
+    left, right = delta_w//2, delta_w-(delta_w//2)
+
+    color = [255, 255, 255]
+    new_im = cv2.copyMakeBorder(im, top, bottom, left, right, cv2.BORDER_CONSTANT,
+        value=color)
+
+    if args.very_verbose:
+        cv2.imshow("image", new_im)
+        cv2.waitKey(0)
+        
+    return new_im
 
 def write_shapes(args, shapes):
     for i, shape in enumerate(shapes):
         mkdir_if_exist_not('{}/{}'.format(args.prefix, i))
         #newimg = cv2.resize(shape, (args.size, args.size))
-        newimg = shape
-        if args.verbose:
-            cv2.imshow("result", newimg)
-            key = cv2.waitKey(0)
+        area = shape.shape[0] * shape.shape[1]
+        if area > 0:
+            newimg = make_border(shape, args.size)
             
-        cv2.imwrite('{}/{}/{}'.format(args.prefix, i, os.path.basename(args.filepath)), newimg)
-
+            
+            if args.verbose:
+                cv2.imshow("result", newimg)
+                key = cv2.waitKey(0)
+                
+            cv2.imwrite('{}/{}/{}'.format(args.prefix, i, os.path.basename(args.filepath)), newimg)
+        else:
+            log.error('shape {} for image:{} area is zero'.format(i, args.filepath))
+                
 import argparse
 if __name__ == '__main__':
 
     filepath = random.choice(glob('*/*.jpg'))
     
     parser = argparse.ArgumentParser(description='Grid-segmenter')
-    
-    parser.add_argument('-l','--loop',
-                        help='loop through all images',
-                        action='store_true', default=False, dest='loop')
-
-    
-    parser.add_argument('-f','--filepath',
-                        help='path to the image file',
-                        default=filepath, dest='filepath')
-    
-    parser.add_argument('-i','--input-dir',
-                        help='path to the image file',
-                        default='sheets', dest='input_dir')
-
-    parser.add_argument('-F','--force',
-                        help='start tagging even if finished set to true',
-                        action='store_true', default=False, dest='force')
-
-    parser.add_argument('-t','--type',
-                        help='type of interface 0 for point based and 1 for line based',
-                        default=0, dest='type', type=int)
-    
-    parser.add_argument('-d','--prefix-dir',
-                        help='path to the image file',
-                        default='sliced', dest='prefix')
+    subparsers = parser.add_subparsers(help='commands')
 
     parser.add_argument('-s','--size',
                         help='size of the resulting shape',
@@ -682,18 +690,74 @@ if __name__ == '__main__':
                         help='shows all the pieces of the characters',
                         action='store_true', default=False, dest='very_verbose')
         
+
+    parser.add_argument('-d','--prefix-dir',
+                        help='path to the image file',
+                        default='sliced', dest='prefix')
+
+    parser.add_argument('-F','--force',
+                        help='start tagging even if finished set to true',
+                        action='store_true', default=False, dest='force')
+    
+    tag_parser = subparsers.add_parser('tag', help='tags images and saves to *.grid2 files')
+    tag_parser.add_argument('-T', '--tag', default='tag', dest='task')
+
+    tag_parser.add_argument('-l','--loop',
+                        help='loop through all images',
+                        action='store_true', default=False, dest='loop')
+
+    
+    tag_parser.add_argument('-f','--filepath',
+                        help='path to the image file',
+                        default=filepath, dest='filepath')
+    
+    tag_parser.add_argument('-i','--input-dir',
+                        help='path to the image file',
+                        default='sheets', dest='input_dir')
+
+
+    tag_parser.add_argument('-t','--type',
+                        help='type of interface 0 for point based and 1 for line based',
+                        default=0, dest='type', type=int)
+    
+
+
+
+    slice_parser = subparsers.add_parser('slice', help='slices the tagged images using .grid2 files')
+    slice_parser.add_argument('-S', '--slice', default='slice', dest='task')
+
+        
+    slice_parser.add_argument('-i','--input-dir',
+                              help='path to the directory with .grid2 files',
+                              default='sliced', dest='input_dir')
+
+    
     args = parser.parse_args()
 
     pprint(args)
-    if args.loop:
-        for filepath in glob('{}/*.jpg'.format(args.input_dir)):
+
+
+    if args.task == 'slice':
+        for filepath in glob('*/*.jpg'.format(args.input_dir)):
             log.info('processing {}'.format(filepath))
-            args.filepath = filepath
+            grid_tagged_filepath = 'sliced/' + os.path.basename(filepath) + '.grid2'
+            if glob(grid_tagged_filepath):
+                log.info('found {}'.format(grid_tagged_filepath))
+                args.filepath = filepath
+                total_count, shapes = process(args, task='slice')
+                print('total count: {}'.format(total_count))
+                write_shapes(args, shapes)
+        
+    elif args.task == 'tag':
+        if args.loop:
+            for filepath in glob('{}/*.jpg'.format(args.input_dir)):
+                log.info('processing {}'.format(filepath))
+                args.filepath = filepath
+                total_count, shapes = process(args, task='tag')
+                print('total count: {}'.format(total_count))
+                write_shapes(args, shapes)
+                
+        else:
             total_count, shapes = process(args)
             print('total count: {}'.format(total_count))
             write_shapes(args, shapes)
-
-    else:
-        total_count, shapes = process(args)
-        print('total count: {}'.format(total_count))
-        write_shapes(args, shapes)
