@@ -521,6 +521,13 @@ class Grid:
                         self.bulk_orientation = 0
                     log.debug('setting bulk to {}'.format(self.bulk_orientation))
 
+                elif k == ord('f'):
+                    log.debug('rotate image {} degree'.format(-180))
+                    self.state = self.STATE_ROTATE
+                    self.source = rotate(self.source, -180)
+                    self.rotation -= 180
+                    self.draw()
+
                 elif k == ord(' '):
                     self.save_state()
 
