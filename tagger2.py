@@ -507,7 +507,7 @@ class Grid:
                     self.draw()
 
                 elif k == ord('c'):
-                    log.debug('clear roration')
+                    log.debug('clear rotation')
                     self.state = self.STATE_ROTATE
                     self.source = self.source_backup.copy()
                     self.rotation = 0
