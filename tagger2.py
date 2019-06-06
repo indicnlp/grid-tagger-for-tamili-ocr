@@ -145,8 +145,12 @@ class Grid:
                                                            pformat(self.boxes[self.grabbed])
         ))
 
+    def get_boxes(self):
+        return self.boxes[1:]
 
-
+    def is_finished(self):
+        return self.finished
+    
     def generate_new_grid(self, anchor, box_dist_m=None, box_dist_n=None):
         
         self.boxes = [self.sentinel,]
