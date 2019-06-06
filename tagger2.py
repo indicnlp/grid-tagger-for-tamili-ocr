@@ -418,6 +418,7 @@ class Grid:
     def start(self):
         print('image state == {} and args.force == {}'.format(self.finished, self.args.force))
         if self.finished == False or self.args.force:
+            self.finished = False
             self.draw()
             self.state = self.STATE_GRAB
             self.source = rotate(self.source_backup, self.rotation)
