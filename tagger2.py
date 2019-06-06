@@ -582,7 +582,7 @@ class Grid:
             log.exception('====')
 
 
-def process(args, filepath=None):
+def process(args, filepath=None, task='tag'):
     if filepath == None:
         filepath = args.filepath
         
@@ -592,12 +592,21 @@ def process(args, filepath=None):
     img = cv2.cvtColor(source, cv2.COLOR_BGR2GRAY)
 
     grid = Grid(args, os.path.basename(filepath), source)
-    boxes = grid.start()
 
+    if task == 'tag':
+        boxes = grid.start()
+        
+    elif task == 'slice':
+        try:
+            assert grid.is_finished(), 'image:{} not tagged completely'.format(filepath)
+            boxes = grid.get_boxes()
+        except:
+            log.exception(filepath)
+            return 0, []
+        
     if args.very_verbose:
         log.debug(boxes)
         log.debug(len(boxes))
-
 
     total_count = 0
     shapes = []
