@@ -15,7 +15,7 @@ import logging
 FORMAT_STRING = "%(levelname)-8s:%(name)-8s.%(funcName)-8s>> %(message)s"
 logging.basicConfig(format=FORMAT_STRING)
 log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
+log.setLevel(logging.INFO)
 import sys
 
 from pprint import pprint, pformat
