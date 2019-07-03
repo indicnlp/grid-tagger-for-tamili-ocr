@@ -781,7 +781,10 @@ if __name__ == '__main__':
                 args.filepath = filepath
                 total_count, shapes = process(args, task='tag')
                 print('total count: {}'.format(total_count))
+
                 write_shapes(args, shapes)
+                cv2.destroyAllWindows()
+                        
                 
         else:
             total_count, shapes = process(args)
