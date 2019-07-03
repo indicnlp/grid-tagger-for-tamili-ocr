@@ -614,14 +614,30 @@ def process(args, filepath=None, task='tag'):
 
         try:
             (x, y), (dx, dy) = box
+            y1, y2 = y-dy, y+dy
+            x1, x2 = x-dx, x+dx
+
+            log.debug('before limiting ({}:{}, {}:{}), '.format(y1, y2, x1, x2))
+
+            if y1 < 0: y1 = 0
+            if x1 < 0: x1 = 0
+
+            if y2 > source.shape[0]: y1 = source.shape[0]
+            if x2 > source.shape[1]: x1 = source.shape[1]
+
             char = source [
-                y-dy : y+dy,
-                x-dx : x+dx
+                y1:y2,
+                x1:x2
             ]
         
             total_count += 1
             shapes.append(char)
-            print(char.shape)
+            log.debug('{} shape: {} taken from ({}:{}, {}:{}), '.format(i,
+                                                                        pformat(char.shape),
+                                                                        y1, y2,
+                                                                        x1, x2
+
+            ))
             if args.very_verbose:
                 cv2.imshow('char', char)
                 cv2.waitKey(0)
