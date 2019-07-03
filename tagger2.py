@@ -577,9 +577,12 @@ class Grid:
                  self.box_dist_m, self.box_dist_n,
                  self.grid_anchor_point,
                  self.finished) = state
-                
+        except IOError:
+            log.exception('====')
+            raise IOError
         except:
             log.exception('====')
+            
 
 
 def process(args, filepath=None, task='tag'):
@@ -597,13 +600,9 @@ def process(args, filepath=None, task='tag'):
         boxes = grid.start()
         
     elif task == 'slice':
-        try:
-            assert grid.is_finished(), 'image:{} not tagged completely'.format(filepath)
-            boxes = grid.get_boxes()
-        except:
-            log.exception(filepath)
-            return 0, []
-        
+        assert grid.is_finished(), 'image:{} not tagged completely'.format(filepath)
+        boxes = grid.get_boxes()
+                
     if args.very_verbose:
         log.debug(boxes)
         log.debug(len(boxes))
@@ -747,16 +746,34 @@ if __name__ == '__main__':
 
 
     if args.task == 'slice':
-        for filepath in glob('*/*.jpg'.format(args.input_dir)):
-            log.info('processing {}'.format(filepath))
-            grid_tagged_filepath = 'sliced/' + os.path.basename(filepath) + '.grid2'
-            if glob(grid_tagged_filepath):
-                log.info('found {}'.format(grid_tagged_filepath))
-                args.filepath = filepath
-                total_count, shapes = process(args, task='slice')
-                print('total count: {}'.format(total_count))
-                write_shapes(args, shapes)
-        
+        incomplete_count = 0
+        ioerror = 0
+        for filepath in tqdm(glob('*/*.jpg'.format(args.input_dir))):
+            try:
+                log.info('processing {}'.format(filepath))
+                grid_tagged_filepath = args.input_dir + '/' + os.path.basename(filepath) + '.grid2'
+                if glob(grid_tagged_filepath):
+                    log.info('found {}'.format(grid_tagged_filepath))
+                    args.filepath = filepath
+                    total_count, shapes = process(args, task='slice')
+                    print('total count: {}'.format(total_count))
+
+                    write_shapes(args, shapes)
+                    cv2.destroyAllWindows()
+            except AssertionError:
+                incomplete_count += 1
+                print('incomplete count: {}'.format(incomplete_count))
+                print('ioerror count: {}'.format(ioerror))
+
+            except IOError:
+                ioerror += 1
+                print('incomplete count: {}'.format(incomplete_count))
+                print('ioerror count: {}'.format(ioerror))
+
+
+        print('incomplete count: {}'.format(incomplete_count))
+        print('ioerror count: {}'.format(ioerror))
+                
     elif args.task == 'tag':
         if args.loop:
             for filepath in glob('{}/*.jpg'.format(args.input_dir)):
