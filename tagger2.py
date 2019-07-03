@@ -90,7 +90,7 @@ class Grid:
 
         self.args = args
         self.name = name
-        self.filepath = '{}/{}.grid2'.format(self.args.prefix, self.name)
+        self.filepath = '{}/{}.grid2'.format(self.args.input_dir, self.name)
         
         self.img = rotate(img, 90)
         self.source = self.img.copy()
