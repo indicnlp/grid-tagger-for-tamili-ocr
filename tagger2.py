@@ -667,7 +667,10 @@ def write_shapes(args, shapes):
         #newimg = cv2.resize(shape, (args.size, args.size))
         area = shape.shape[0] * shape.shape[1]
         if area > 0:
-            newimg = make_border(shape, args.size)
+            newimg = make_border(
+                rotate(shape, -90),
+                args.size
+            )
             
             
             if args.verbose:
