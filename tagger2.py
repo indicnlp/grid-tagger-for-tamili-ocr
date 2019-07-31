@@ -128,9 +128,9 @@ class Grid:
         self.grabbed_bulk_box_backup = []
 
         
-        cv2.namedWindow(self.name)
-        cv2.namedWindow(self.name + '.slice')
-        cv2.setMouseCallback(self.name, self.callback)
+        #cv2.namedWindow(self.name)
+        #cv2.namedWindow(self.name + '.slice')
+        #cv2.setMouseCallback(self.name, self.callback)
 
         self.load_state()
 
