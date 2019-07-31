@@ -90,7 +90,7 @@ class Grid:
 
         self.args = args
         self.name = name
-        self.filepath = '{}/{}.grid2'.format(self.args.input_dir, self.name)
+        self.filepath = '{}/{}.grid2'.format(self.args.prefix, self.name)
         
         self.img = rotate(img, 90)
         self.source = self.img.copy()
@@ -770,7 +770,7 @@ if __name__ == '__main__':
         for filepath in tqdm(glob('*/*.jpg'.format(args.input_dir))):
             try:
                 log.info('processing {}'.format(filepath))
-                grid_tagged_filepath = args.input_dir + '/' + os.path.basename(filepath) + '.grid2'
+                grid_tagged_filepath = args.prefix + '/' + os.path.basename(filepath) + '.grid2'
                 if glob(grid_tagged_filepath):
                     log.info('found {}'.format(grid_tagged_filepath))
                     args.filepath = filepath
